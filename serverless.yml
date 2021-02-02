@@ -1,0 +1,77 @@
+service: idverification
+plugins:
+  - serverless-offline
+  - serverless-dynamodb-local
+
+custom:
+  # serverless-offline
+  serverless-offline:
+    httpPort: ${env:LOCAL_APP_PORT, 3000}
+    useChildProcesses: true
+
+  # serverless-dynamodb-local
+  dynamodb:
+    stages:
+      - local
+    start:
+      port: 8083
+      inMemory: true
+      heapInitial: 200m
+      heapMax: 1g
+      migrate: true
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: ${opt:region, 'us-east-1'}
+  websocketsApiName: custom-websockets-api-name
+  websocketsApiRouteSelectionExpression: $request.body.action
+  versionFunctions: false
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+  role: arn:aws:iam::#{AWS::AccountId}:role/acct-managed/${self:service}-lambda-test
+
+resources:
+  Resources:
+    Table:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: TABLE
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: "pk"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "pk"
+            KeyType: "HASH"
+        SSESpecification:
+          KMSMasterKeyId: ${self:custom.piiKmsKey}
+          SSEEnabled: true
+          SSEType: "KMS"
+
+functions:
+  connectionHandler:
+    handler: handler.connectionHandler
+    events:
+      - websocket:
+          route: $connect
+          # cors: true
+          authorizer:
+            name: auth
+            identitySource:
+              - "route.request.header.Auth"
+              - "route.request.header.AuthHeader"
+
+      - websocket:
+          route: $disconnect
+  defaultHandler:
+    handler: handler.defaultHandler
+    events:
+      - websocket: $default # support all unhandled
+  sendMessage:
+    handler: handler.sendMessage
+    events:
+      - websocket:
+          route: sendMessage
+  auth:
+    handler: handler.auth

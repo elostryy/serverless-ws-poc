@@ -1,0 +1,24 @@
+{
+  "name": "serverless-ws-poc",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:elostryy/serverless-ws-poc.git",
+  "author": "pc",
+  "license": "MIT",
+  "scripts": {
+    "dynamo": "sls dynamodb install --env=LOCAL --stage=local && sls dynamodb start --env=LOCAL --stage=local",
+    "dev": "sls offline --env=LOCAL --stage=local",
+    "play": "wscat -c ws://localhost:3001 -H Auth:secret"
+  },
+  "devDependencies": {
+    "@shelf/jest-dynamodb": "^1.7.0",
+    "serverless": "^2.22.0",
+    "serverless-dynamodb-local": "^0.2.39",
+    "serverless-offline": "^6.8.0",
+    "wscat": "^4.0.1"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.834.0",
+    "got": "^11.8.1"
+  }
+}
