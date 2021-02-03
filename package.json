@@ -8,7 +8,8 @@
   "scripts": {
     "dynamo": "sls dynamodb install --env=LOCAL --stage=local && sls dynamodb start --env=LOCAL --stage=local",
     "dev": "sls offline --env=LOCAL --stage=local",
-    "play": "wscat -c ws://localhost:3001 -H Auth:secret"
+    "play1": "wscat -c ws://localhost:3001 -H Auth:user1",
+    "play2": "wscat -c ws://localhost:3001 -H Auth:user2"
   },
   "devDependencies": {
     "@shelf/jest-dynamodb": "^1.7.0",
@@ -19,6 +20,6 @@
   },
   "dependencies": {
     "aws-sdk": "^2.834.0",
-    "got": "^11.8.1"
+    "node-fetch": "^2.6.1"
   }
 }

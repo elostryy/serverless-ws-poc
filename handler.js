@@ -1,20 +1,22 @@
-const got = require("got");
+const fetch = require("node-fetch");
 const dynamo = require("./dynamo");
 
 const success = {
   statusCode: 200,
   headers: { "Access-Control-Allow-Origin": "*" },
-  body: "everything is alright",
+};
+
+const notFound = {
+  statusCode: 404,
 };
 
 const sendMessageToClient = async (url, connectionId, payload) => {
-  await got
-    .post(`${url}/@connections/${connectionId}`, {
-      body: JSON.stringify(payload),
-    })
-    .catch((err) => {
-      console.log("err is", err);
-    });
+  await fetch(`${url}/@connections/${connectionId}`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  }).catch((err) => {
+    console.log("err is", err);
+  });
 };
 
 const writeConnectionToDb = async (userId, connectionId) => {
@@ -24,9 +26,9 @@ const writeConnectionToDb = async (userId, connectionId) => {
   });
 };
 
-const getConnectionIdsByUserId = async (userId) => {
-  const data = await dynamo.queryByPrimaryKey(userId);
-  return data.map((item) => item.connectionId);
+const getConnectionIdByUserId = async (userId) => {
+  const item = await dynamo.getItemByPrimaryKey({ pk: userId });
+  return item?.connectionId;
 };
 
 const removeConnectionByUserUd = async (userId) => {
@@ -34,24 +36,14 @@ const removeConnectionByUserUd = async (userId) => {
 };
 
 module.exports.defaultHandler = async (event, context) => {
-  const connectionId = event.requestContext.connectionId;
-  const message = event.body;
-  const url = `http://localhost:3001`;
-  const userId = "test_user";
-  const connections = await getConnectionIdsByUserId(userId);
-  await Promise.all(
-    connections.map((connection) =>
-      sendMessageToClient(url, connectionId, { message: `echo_${message}}` })
-    )
-  );
   return success;
 };
 
 module.exports.connectionHandler = async (event, context) => {
   const connectionId = event.requestContext.connectionId;
   if (event.requestContext.eventType === "CONNECT") {
-    console.log({ connectionId }, "connect");
-    const userId = "test_user";
+    const userId = event.headers.Auth;
+    console.log({ connectionId, userId }, "connect");
     await writeConnectionToDb(userId, connectionId);
   } else if (event.requestContext.eventType === "DISCONNECT") {
     console.log({ connectionId }, "disconnect");
@@ -59,19 +51,18 @@ module.exports.connectionHandler = async (event, context) => {
   return success;
 };
 
+// http/sns
 module.exports.sendMessage = async (event, context) => {
   console.log("send message");
-
+  const { message, userId, type } = JSON.parse(event.body) || {};
+  const url = `http://localhost:3001`;
+  const connectionId = await getConnectionIdByUserId(userId);
+  console.log({ connectionId });
+  if (!connectionId) {
+    return notFound;
+  }
+  await sendMessageToClient(url, connectionId, {
+    message: `echo_${message}}`,
+  });
   return success;
-};
-
-// not supported offline
-module.exports.auth = async (event, context) => {
-  context.callbackWaitsForEmptyEventLoop = false;
-  console.log("auth");
-
-  return {
-    ...success,
-    body: JSON.stringify({ auth: true, token: `${Date.now()}_token` }),
-  };
 };

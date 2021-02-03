@@ -55,13 +55,11 @@ functions:
     events:
       - websocket:
           route: $connect
-          # cors: true
-          authorizer:
-            name: auth
-            identitySource:
-              - "route.request.header.Auth"
-              - "route.request.header.AuthHeader"
-
+          # authorizer:
+          #   name: auth
+          #   identitySource:
+          #     - "route.request.header.Auth"
+          #     - "route.request.header.AuthHeader"
       - websocket:
           route: $disconnect
   defaultHandler:
@@ -71,7 +69,13 @@ functions:
   sendMessage:
     handler: handler.sendMessage
     events:
-      - websocket:
-          route: sendMessage
+      - http:
+          method: post
+          # private: true
+          path: message
+          cors:
+            enabled: true
+            origin: "*"
+            allowCredentials: true
   auth:
     handler: handler.auth
