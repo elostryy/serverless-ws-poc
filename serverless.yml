@@ -1,9 +1,12 @@
-service: idverification
+service: serverless-ws-test
 plugins:
   - serverless-offline
   - serverless-dynamodb-local
+  - serverless-deployment-bucket
 
 custom:
+  # params
+  stageName: 'test'
   # serverless-offline
   serverless-offline:
     httpPort: ${env:LOCAL_APP_PORT, 3000}
@@ -19,6 +22,14 @@ custom:
       heapInitial: 200m
       heapMax: 1g
       migrate: true
+  
+  #api gateway
+  apiGatewayUrl:
+    Fn::Join:
+      - ''
+      - - 'https://'
+        - Ref: 'ApiGatewayRestApi'
+        - '.execute-api.${self:provider.region}.amazonaws.com/${self:custom.stageName}'
 
 provider:
   name: aws
@@ -29,7 +40,8 @@ provider:
   versionFunctions: false
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
-  role: arn:aws:iam::#{AWS::AccountId}:role/acct-managed/${self:service}-lambda-test
+  role: arn:aws:iam::577152972443:role/ws-test
+  deploymentBucket: dri-serverless-ws-lab
 
 resources:
   Resources:
@@ -62,10 +74,12 @@ functions:
           #     - "route.request.header.AuthHeader"
       - websocket:
           route: $disconnect
+    role: ${self:provider.role}
   defaultHandler:
     handler: handler.defaultHandler
     events:
       - websocket: $default # support all unhandled
+    role: ${self:provider.role}
   sendMessage:
     handler: handler.sendMessage
     events:
@@ -77,5 +91,8 @@ functions:
             enabled: true
             origin: "*"
             allowCredentials: true
+    role: ${self:provider.role}
+    environment:
+      API_URL: ${self:custom.apiGatewayUrl, " "}
   auth:
     handler: handler.auth

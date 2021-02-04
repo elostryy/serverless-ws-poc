@@ -28,7 +28,7 @@ const writeConnectionToDb = async (userId, connectionId) => {
 
 const getConnectionIdByUserId = async (userId) => {
   const item = await dynamo.getItemByPrimaryKey({ pk: userId });
-  return item?.connectionId;
+  return item ? item.connectionId : null;
 };
 
 const removeConnectionByUserUd = async (userId) => {
@@ -55,7 +55,7 @@ module.exports.connectionHandler = async (event, context) => {
 module.exports.sendMessage = async (event, context) => {
   console.log("send message");
   const { message, userId, type } = JSON.parse(event.body) || {};
-  const url = `http://localhost:3001`;
+  const url = process.env.API_URL || `http://localhost:3001`;
   const connectionId = await getConnectionIdByUserId(userId);
   console.log({ connectionId });
   if (!connectionId) {
@@ -63,6 +63,7 @@ module.exports.sendMessage = async (event, context) => {
   }
   await sendMessageToClient(url, connectionId, {
     message: `echo_${message}}`,
+    source: type,
   });
   return success;
 };
