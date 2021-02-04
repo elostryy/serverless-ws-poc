@@ -6,7 +6,7 @@ plugins:
 
 custom:
   # params
-  stageName: 'test'
+  stageName: "test"
   # serverless-offline
   serverless-offline:
     httpPort: ${env:LOCAL_APP_PORT, 3000}
@@ -22,14 +22,14 @@ custom:
       heapInitial: 200m
       heapMax: 1g
       migrate: true
-  
+
   #api gateway
   apiGatewayUrl:
     Fn::Join:
-      - ''
-      - - 'https://'
-        - Ref: 'ApiGatewayRestApi'
-        - '.execute-api.${self:provider.region}.amazonaws.com/${self:custom.stageName}'
+      - ""
+      - - "https://"
+        - Ref: "ApiGatewayRestApi"
+        - ".execute-api.${self:provider.region}.amazonaws.com/${self:custom.stageName}"
 
 provider:
   name: aws
@@ -41,7 +41,9 @@ provider:
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
   role: arn:aws:iam::577152972443:role/ws-test
-  deploymentBucket: dri-serverless-ws-lab
+  deploymentBucket:
+    name: dri-serverless-ws-lab
+    serverSideEncryption: AES256
 
 resources:
   Resources:
