@@ -18,6 +18,7 @@ const createError = (err) => {
 };
 
 const sendMessageToClient = async (url, connectionId, payload) => {
+  console.log({ url, connectionId, payload });
   await fetch(`${url}/@connections/${connectionId}`, {
     method: "POST",
     body: JSON.stringify(payload),

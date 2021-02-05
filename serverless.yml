@@ -6,7 +6,7 @@ plugins:
 
 custom:
   # params
-  stageName: "test"
+  stageName: "dev"
   # serverless-offline
   serverless-offline:
     httpPort: ${env:LOCAL_APP_PORT, 3000}
@@ -28,7 +28,7 @@ custom:
     Fn::Join:
       - ""
       - - "https://"
-        - Ref: "ApiGatewayRestApi"
+        - Ref: "WebsocketsApi"
         - ".execute-api.${self:provider.region}.amazonaws.com/${self:custom.stageName}"
 
 provider:
