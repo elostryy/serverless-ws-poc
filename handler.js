@@ -3,11 +3,18 @@ const dynamo = require("./dynamo");
 
 const success = {
   statusCode: 200,
-  headers: { "Access-Control-Allow-Origin": "*" },
 };
 
 const notFound = {
   statusCode: 404,
+};
+
+const createError = (err) => {
+  console.error("Error happens", err);
+  return {
+    statusCode: 500,
+    error: err,
+  };
 };
 
 const sendMessageToClient = async (url, connectionId, payload) => {
@@ -40,30 +47,38 @@ module.exports.defaultHandler = async (event, context) => {
 };
 
 module.exports.connectionHandler = async (event, context) => {
-  const connectionId = event.requestContext.connectionId;
-  if (event.requestContext.eventType === "CONNECT") {
-    const userId = event.headers.Auth;
-    console.log({ connectionId, userId }, "connect");
-    await writeConnectionToDb(userId, connectionId);
-  } else if (event.requestContext.eventType === "DISCONNECT") {
-    console.log({ connectionId }, "disconnect");
+  try {
+    const connectionId = event.requestContext.connectionId;
+    if (event.requestContext.eventType === "CONNECT") {
+      const userId = event.headers.Auth;
+      console.log({ connectionId, userId }, "connect");
+      await writeConnectionToDb(userId, connectionId);
+    } else if (event.requestContext.eventType === "DISCONNECT") {
+      console.log({ connectionId }, "disconnect");
+    }
+    return success;
+  } catch (e) {
+    return createError(e);
   }
-  return success;
 };
 
 // http/sns
 module.exports.sendMessage = async (event, context) => {
-  console.log("send message");
-  const { message, userId, type } = JSON.parse(event.body) || {};
-  const url = process.env.API_URL || `http://localhost:3001`;
-  const connectionId = await getConnectionIdByUserId(userId);
-  console.log({ connectionId });
-  if (!connectionId) {
-    return notFound;
+  try {
+    console.log("send message");
+    const { message, userId, type } = JSON.parse(event.body) || {};
+    const url = process.env.API_URL || `http://localhost:3001`;
+    const connectionId = await getConnectionIdByUserId(userId);
+    console.log({ connectionId });
+    if (!connectionId) {
+      return notFound;
+    }
+    await sendMessageToClient(url, connectionId, {
+      message: `echo_${message}}`,
+      source: type,
+    });
+    return success;
+  } catch (e) {
+    return createError(e);
   }
-  await sendMessageToClient(url, connectionId, {
-    message: `echo_${message}}`,
-    source: type,
-  });
-  return success;
 };

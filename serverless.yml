@@ -40,28 +40,28 @@ provider:
   versionFunctions: false
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
-  role: arn:aws:iam::577152972443:role/ws-test
+  role: arn:aws:iam::577152972443:role/ws-test-2
   deploymentBucket:
     name: dri-serverless-ws-lab
     serverSideEncryption: AES256
 
-resources:
-  Resources:
-    Table:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: TABLE
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: "pk"
-            AttributeType: "S"
-        KeySchema:
-          - AttributeName: "pk"
-            KeyType: "HASH"
-        SSESpecification:
-          KMSMasterKeyId: ${self:custom.piiKmsKey}
-          SSEEnabled: true
-          SSEType: "KMS"
+# resources:
+#   Resources:
+#     Table:
+#       Type: AWS::DynamoDB::Table
+#       Properties:
+#         TableName: TABLE
+#         BillingMode: PAY_PER_REQUEST
+#         AttributeDefinitions:
+#           - AttributeName: "pk"
+#             AttributeType: "S"
+#         KeySchema:
+#           - AttributeName: "pk"
+#             KeyType: "HASH"
+#         SSESpecification:
+#           KMSMasterKeyId: ${self:custom.piiKmsKey}
+#           SSEEnabled: true
+#           SSEType: "KMS"
 
 functions:
   connectionHandler:
@@ -89,12 +89,9 @@ functions:
           method: post
           # private: true
           path: message
-          cors:
-            enabled: true
-            origin: "*"
-            allowCredentials: true
+          cors: true
     role: ${self:provider.role}
     environment:
       API_URL: ${self:custom.apiGatewayUrl, " "}
-  auth:
-    handler: handler.auth
+  # auth:
+  #   handler: handler.auth

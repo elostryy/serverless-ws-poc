@@ -3,27 +3,7 @@ const { DynamoDB } = require("aws-sdk");
 const tableName = "TABLE";
 
 const getClient = () => {
-  const localOptions = {
-    region: "localhost",
-    accessKeyId: "xxxx",
-    secretAccessKey: "xxxx",
-    endpoint: "http://localhost:8083",
-  };
-  // await new DynamoDB()
-  //   .createTable({
-  //     AttributeDefinitions: [{ AttributeName: "pk", AttributeType: "S" }],
-  //     KeySchema: [{ AttributeName: "pk", KeyType: "HASH" }],
-  //     ProvisionedThroughput: {
-  //       ReadCapacityUnits: 1,
-  //       WriteCapacityUnits: 1,
-  //     },
-  //     TableName: tableName,
-  //     StreamSpecification: {
-  //       StreamEnabled: false,
-  //     },
-  //   })
-  //   .promise();
-  return new DynamoDB.DocumentClient(localOptions);
+  return new DynamoDB.DocumentClient();
 };
 
 const client = getClient();
