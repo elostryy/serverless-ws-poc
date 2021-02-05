@@ -1,4 +1,4 @@
-const fetch = require("node-fetch");
+const AWS = require("aws-sdk");
 const dynamo = require("./dynamo");
 
 const success = {
@@ -19,12 +19,18 @@ const createError = (err) => {
 
 const sendMessageToClient = async (url, connectionId, payload) => {
   console.log({ url, connectionId, payload });
-  await fetch(`${url}/@connections/${connectionId}`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  }).catch((err) => {
-    console.log("err is", err);
+  const api = new AWS.ApiGatewayManagementApi({
+    endpoint: url,
   });
+  await api
+    .postToConnection({
+      ConnectionId: connectionId,
+      Data: JSON.stringify(payload),
+    })
+    .promise()
+    .catch((err) => {
+      console.error(err);
+    });
 };
 
 const writeConnectionToDb = async (userId, connectionId) => {
@@ -75,7 +81,7 @@ module.exports.sendMessage = async (event, context) => {
       return notFound;
     }
     await sendMessageToClient(url, connectionId, {
-      message: `echo_${message}}`,
+      message: `echo_${message}`,
       source: type,
     });
     return success;

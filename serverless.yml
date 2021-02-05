@@ -27,20 +27,19 @@ custom:
   apiGatewayUrl:
     Fn::Join:
       - ""
-      - - "https://"
-        - Ref: "WebsocketsApi"
+      - - Ref: "WebsocketsApi"
         - ".execute-api.${self:provider.region}.amazonaws.com/${self:custom.stageName}"
 
 provider:
   name: aws
   runtime: nodejs12.x
   region: ${opt:region, 'us-east-1'}
-  websocketsApiName: custom-websockets-api-name
-  websocketsApiRouteSelectionExpression: $request.body.action
-  versionFunctions: false
+  # can be omitted in new version
+  # websocketsApiName: custom-websockets-api-name
+  # websocketsApiRouteSelectionExpression: $request.body.action
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
-  role: arn:aws:iam::577152972443:role/ws-test-2
+  role: arn:aws:iam::577152972443:role/ws-test-3
   deploymentBucket:
     name: dri-serverless-ws-lab
     serverSideEncryption: AES256
